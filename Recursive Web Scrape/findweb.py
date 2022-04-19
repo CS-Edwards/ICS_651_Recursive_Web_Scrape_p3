@@ -1,6 +1,6 @@
 '''
 Created on Apr 9, 2022
-@author: Candace Edwards
+@author: CS-Edwards
 ICS-651 - Comp Networks Project 3
 '''
 
