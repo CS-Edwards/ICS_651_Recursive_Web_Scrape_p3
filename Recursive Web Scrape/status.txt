@@ -1,0 +1,136 @@
+Status: findweb.py runs with bugs
+Bug: For recursive searches of some sites (not all) word count is different than expected value
+
+System: Windows 10 ; Eclipse IDE PyDev -- Python 10
+
+Overall Functionality:
+- takes command line arguments: string to search and multiple URLs
+- recognizes recursive flag '-r' anywhere in command line
+- non-recursive find_web runs as expected
+- word count successful for non-rec search
+- recursive find_web runs as expected for some sites but not for others (aforementioned BUG)
+- successfully searches 'src' and 'href' attribute links, add valid links to url search
+- successfully searches links hierarchically (disguards external links and links not 'below' current url)
+- no infinite loops (only searches site 1x)
+- detects errors: invalid urls not searched, exceptions caught and handled 
+- successfully recurs through redirect page 
+
+
+Notes:
+**str to search is CASE SENSATIVE; for example on https://www.ics.hawaii.edu  searching for 'Computer' counts 18, 'computer' counts 3
+
+Libraries:
+import validators
+import requests
+import sys
+from sys import argv
+from bs4 import BeautifulSoup
+from lxml import etree
+
+
+###TESTING SUMMARY###
+Instructions: enter text after '>' into command line (or Run Config in IDE) to begin tests
+First argument must be string to search
+ie: $python [FILE PATH]/Project3/findweb.py [arg1_String] [arg2] [arg3] 
+
+MAKEFILE has two examples of how to run program, additional test listed below
+
+#TESTING- Single URL Search (Non-Rec) //status: Successful
+
+Case 1:
+> project http://www2.hawaii.edu/~esb/2022spring.ics651/project3.html 
+
+Expected: 16 http://www2.hawaii.edu/~esb/2022spring.ics651/project3.html
+Results:
+**Final Output**
+16 http://www2.hawaii.edu/~esb/2022spring.ics651/project3.html
+
+Case 2:
+> project http://www2.hawaii.edu/~esb/2022spring.ics651/
+Expected: 9 http://www2.hawaii.edu/~esb/2022spring.ics651
+
+Results:
+**Final Output**
+16 http://www2.hawaii.edu/~esb/2022spring.ics651/project3.html
+9 http://www2.hawaii.edu/~esb/2022spring.ics651
+
+#TESTING - Multi URL Search (Non-Rec) //status: Successful
+
+Case 3:
+> project http://www2.hawaii.edu/~esb/2022spring.ics651/project3.html http://www2.hawaii.edu/~esb/2022spring.ics651/
+
+Expected: 
+16 http://www2.hawaii.edu/~esb/2022spring.ics651/project3.html
+9 http://www2.hawaii.edu/~esb/2022spring.ics651
+
+Results:
+**Final Output**
+16 http://www2.hawaii.edu/~esb/2022spring.ics651/project3.html
+9 http://www2.hawaii.edu/~esb/2022spring.ics651
+
+
+#TESTING - Single URL *Recursive* Search// status: Has bugs
+
+Case 4:
+> project http://www2.hawaii.edu/~esb/2022spring.ics651/project3.html -r
+
+Expected: 16 http://www2.hawaii.edu/~esb/2022spring.ics651/project3.html
+
+Results:
+**Final Output**
+16 http://www2.hawaii.edu/~esb/2022spring.ics651/project3.html
+
+Case 5: SINGLE URL with REDIRECT (redirect works but word search has issues)
+>project http://www2.hawaii.edu/~esb/ -r
+
+Expected: multiple values starting with...
+6 http://www2.hawaii.edu/~esb
+
+Results:
+**Final Output**
+0 http://www2.hawaii.edu/~esb
+
+#TESTING - Multi URL *Recursive* Search//status: Successful
+Case 6:
+> project http://www2.hawaii.edu/~esb/2022spring.ics651/project3.html http://www2.hawaii.edu/~esb/2022spring.ics651/ -r
+
+Expected: multiple outputs.. starting with:
+16 http://www2.hawaii.edu/~esb/2022spring.ics651/project3.html
+9 http://www2.hawaii.edu/~esb/2022spring.ics651
+
+Results:
+**Final Output**
+16 http://www2.hawaii.edu/~esb/2022spring.ics651/project3.html
+9 http://www2.hawaii.edu/~esb/2022spring.ics651
+13 http://www2.hawaii.edu/~esb/2022spring.ics651/index.html
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/index.html/~esb/2020fall.ics651/
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/admin.html
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/~esb/2020fall.ics651/
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/notes1.html
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0110.pdf
+1 http://www2.hawaii.edu/~esb/2022spring.ics651/hw1.html
+1 http://www2.hawaii.edu/~esb/2022spring.ics651/0112.pdf
+28 http://www2.hawaii.edu/~esb/2022spring.ics651/0119.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/hw2.html
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/notes2.html
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/project1.html
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0124.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0126.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0131.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0202.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0207.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0209.pdf
+14 http://www2.hawaii.edu/~esb/2022spring.ics651/0214.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0216.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/notes3.html
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/project2.html
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0228.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0302.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0307.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0309.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0321.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0328.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0330.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/0404.pdf
+0 http://www2.hawaii.edu/~esb/2022spring.ics651/notes4.html
+17 http://www2.hawaii.edu/~esb/2022spring.ics651/0411.pdf
