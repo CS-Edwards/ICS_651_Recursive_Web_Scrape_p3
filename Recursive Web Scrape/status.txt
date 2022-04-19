@@ -1,5 +1,5 @@
 Status: findweb.py runs with bugs
-Bug: For recursive searches of some sites (not all) word count is different than expected value
+Bug: For recursive searches of some sites (not all) word count is varies from expected value
 
 System: Windows 10 ; Eclipse IDE PyDev -- Python 10
 
